@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Stage, Layer, Line, Circle, Text, Rect, Arrow } from "react-konva";
 import { BiText, BiRectangle, BiBrush } from "react-icons/bi";
 import ImageUpload from "./imageUpload";
-
+import { Dropdown, Menu, theme } from "antd";
 import {
   BsPencil,
   BsStickyFill,
@@ -607,6 +607,36 @@ const DrawingArea = () => {
     // setNotes(res)
   };
 
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMoveForNote = (event) => {
+    setPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const menu = (
+    <Menu
+      onClick={(item) => {
+        console.log(item.key, position.x, position.y);
+
+        if (item.key === "1") {
+          handleAddNote(position.x, position.y, "Rectangle");
+        }
+      }}
+      items={[
+        {
+          label: "Add Sticky Note",
+          key: "1",
+          icon: <BsStickyFill />,
+        },
+        {
+          label: "Add Text",
+          key: "2",
+          icon: <BiText />,
+        },
+      ]}
+    ></Menu>
+  );
+
   return (
     <>
       <div
@@ -689,7 +719,6 @@ const DrawingArea = () => {
                 <BsEraser size={20} color="blue" />
               </div>
 
-             
               <div
                 variant="light"
                 onClick={() => setSelectedTool("brush")}
@@ -768,127 +797,143 @@ const DrawingArea = () => {
             </div>
           </div>
           {/* code for drawing boards */}
-          <Stage
-            width={window.innerWidth}
-            height={window.innerHeight}
-            onMouseDown={handleMouseDown}
-            onMousemove={handleMouseMove}
-            onMouseup={handleMouseUp}
-            className="canvas-stage"
-            ref={stageRef}
-            scaleX={scale}
-            scaleY={scale}
-            style={{ background: "white" }}
-          >
-            <Layer>
-              {arrows.map((arrow) => (
-                <Arrow
-                  key={arrow.id}
-                  points={[arrow.startX, arrow.startY, arrow.endX, arrow.endY]}
-                  stroke={arrow.color}
-                  strokeWidth={arrow.strokeWidth}
-                  draggable
-                />
-              ))}
-              {lines.map((line, i) => (
-                <Line
-                  key={i}
-                  points={line.points}
-                  stroke={line.color}
-                  strokeWidth={
-                    line.line ? 1 : line.line2 ? 2 : line.line3 ? 4 : 6
-                  }
-                  ref={
-                    line.line
-                      ? line.ref
-                      : line.line2
-                      ? lineRef2.current
-                      : line.line3
-                      ? lineRef3.current
-                      : selectedTool === "brush"
-                      ? brushRef.current
-                      : null
-                  }
-                />
-              ))}
+          {/* add antd here */}
+          <Dropdown overlay={menu} trigger={["contextMenu"]}>
+            <div
+              onContextMenu={(e) => {
+                e.preventDefault(); // prevent the default behaviour when right clicked
+                console.log("Right Click");
+              }}
+              onMouseMove={handleMouseMoveForNote}
+            >
+              <Stage
+                width={window.innerWidth}
+                height={window.innerHeight}
+                onMouseDown={handleMouseDown}
+                onMousemove={handleMouseMove}
+                onMouseup={handleMouseUp}
+                className="canvas-stage"
+                ref={stageRef}
+                scaleX={scale}
+                scaleY={scale}
+                style={{ background: "white" }}
+              >
+                <Layer>
+                  {arrows.map((arrow) => (
+                    <Arrow
+                      key={arrow.id}
+                      points={[
+                        arrow.startX,
+                        arrow.startY,
+                        arrow.endX,
+                        arrow.endY,
+                      ]}
+                      stroke={arrow.color}
+                      strokeWidth={arrow.strokeWidth}
+                      draggable
+                    />
+                  ))}
+                  {lines.map((line, i) => (
+                    <Line
+                      key={i}
+                      points={line.points}
+                      stroke={line.color}
+                      strokeWidth={
+                        line.line ? 1 : line.line2 ? 2 : line.line3 ? 4 : 6
+                      }
+                      ref={
+                        line.line
+                          ? line.ref
+                          : line.line2
+                          ? lineRef2.current
+                          : line.line3
+                          ? lineRef3.current
+                          : selectedTool === "brush"
+                          ? brushRef.current
+                          : null
+                      }
+                    />
+                  ))}
 
-              {circles.map((circle, i) => (
-                <Circle
-                  key={i}
-                  x={circle.x}
-                  y={circle.y}
-                  radius={circle.radius}
-                  stroke={circle.color}
-                  strokeWidth={2}
-                  draggable={true}
-                  onDragMove={(e) => handleCircleDragMove(e, i)}
-                  globalCompositeOperation={"source-over"}
-                />
-              ))}
-              {rectangles.map((rectangle, i) => (
-                <Rect
-                  key={i}
-                  x={rectangle.x}
-                  y={rectangle.y}
-                  width={rectangle.width}
-                  height={rectangle.height}
-                  stroke={rectangle.color}
-                  strokeWidth={2}
-                  draggable
-                  // onTransform={(e) => handleRectTransform(e)}
-                  onDragMove={(e) => handleRectangleDragMove(e, i)}
-                />
-              ))}
+                  {circles.map((circle, i) => (
+                    <Circle
+                      key={i}
+                      x={circle.x}
+                      y={circle.y}
+                      radius={circle.radius}
+                      stroke={circle.color}
+                      strokeWidth={2}
+                      draggable={true}
+                      onDragMove={(e) => handleCircleDragMove(e, i)}
+                      globalCompositeOperation={"source-over"}
+                    />
+                  ))}
+                  {rectangles.map((rectangle, i) => (
+                    <Rect
+                      key={i}
+                      x={rectangle.x}
+                      y={rectangle.y}
+                      width={rectangle.width}
+                      height={rectangle.height}
+                      stroke={rectangle.color}
+                      strokeWidth={2}
+                      draggable
+                      // onTransform={(e) => handleRectTransform(e)}
+                      onDragMove={(e) => handleRectangleDragMove(e, i)}
+                    />
+                  ))}
 
-              {texts.map((text, i) => (
-                <Text
-                  key={i}
-                  x={text.x}
-                  y={text.y}
-                  text={text.text}
-                  fontSize={text.fontSize}
-                  draggable={true}
-                  onDragMove={(e) => handleTextDragMove(e, i)}
-                  globalCompositeOperation={"source-over"}
-                />
-              ))}
+                  {texts.map((text, i) => (
+                    <Text
+                      key={i}
+                      x={text.x}
+                      y={text.y}
+                      text={text.text}
+                      fontSize={text.fontSize}
+                      draggable={true}
+                      onDragMove={(e) => handleTextDragMove(e, i)}
+                      globalCompositeOperation={"source-over"}
+                    />
+                  ))}
 
-              {notes.map((note, index) => (
-                <Sticky
-                  key={index}
-                  {...note}
-                  handleDragEnd={(event) => {
-                    const updatedNotes = [...notes];
-                    updatedNotes[index].x = event.target.x();
-                    updatedNotes[index].y = event.target.y();
-                    setNotes(updatedNotes);
-                  }}
-                  shape={note.shape} // Pass the shape as a prop
-                  // isSelected={true}
-                  isSelected={index === selectedIndex}
-                  isText={index === selectedTextIndex} // Set isSelected to true for the specific index
-                  handleSelect={() => handleNoteSelect(index)}
-                  onSelectText={() => handleNoteSelectText(index)}
-                  onChange={(newText) => handleNoteChange(index, newText)}
-                  onDelete={() => handleNoteDelete(index)}
-                />
-              ))}
+                  {notes.map((note, index) => (
+                    <Sticky
+                      key={index}
+                      {...note}
+                      handleDragEnd={(event) => {
+                        const updatedNotes = [...notes];
+                        updatedNotes[index].x = event.target.x();
+                        updatedNotes[index].y = event.target.y();
+                        setNotes(updatedNotes);
+                      }}
+                      shape={note.shape} // Pass the shape as a prop
+                      // isSelected={true}
+                      isSelected={index === selectedIndex}
+                      isText={index === selectedTextIndex} // Set isSelected to true for the specific index
+                      handleSelect={() => handleNoteSelect(index)}
+                      onSelectText={() => handleNoteSelectText(index)}
+                      onChange={(newText) => handleNoteChange(index, newText)}
+                      onDelete={() => handleNoteDelete(index)}
+                    />
+                  ))}
 
-              {images.length > 0 &&
-                images.map((image) => (
-                  <ImageUpload
-                    key={image.id}
-                    image={image}
-                    isSelected={selectedId === image.id}
-                    onSelect={() => handleSelect(image.id)}
-                    onChange={(x, y) => handleDragEnd(image.id, x, y)}
-                    onResize={(width, height) =>
-                      handleResize(image.id, width, height)
-                    }
-                  />
-                ))}
-            </Layer>
-          </Stage>
+                  {images.length > 0 &&
+                    images.map((image) => (
+                      <ImageUpload
+                        key={image.id}
+                        image={image}
+                        isSelected={selectedId === image.id}
+                        onSelect={() => handleSelect(image.id)}
+                        onChange={(x, y) => handleDragEnd(image.id, x, y)}
+                        onResize={(width, height) =>
+                          handleResize(image.id, width, height)
+                        }
+                      />
+                    ))}
+                </Layer>
+              </Stage>
+            </div>
+          </Dropdown>
         </div>
       </div>
 
